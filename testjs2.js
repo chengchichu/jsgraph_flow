@@ -1,4 +1,5 @@
 
+// base graph
 
 var dotSrc = `
 
@@ -50,34 +51,10 @@ digraph {
 
 `;
 
-console.log('hello world');
 // console.log('DOT source =', dotSrc);
-
 var dotSrcLines = dotSrc.split('\n');
-//var n1 = "swip3 ->"
-//var n2 = "-> swip3"
 
-
-
-
-
-/* function find_upstr(trg, dotSrcLines) {
-    for (i = 0; i < dotSrcLines.length;i++) {
-        //console.log('Str line %d: %s', i, dotSrcLines[i].split('[')[0]);
-        let Unodes = [];
-        if (dotSrcLines[i].indexOf('-> '.concat(trg))>0) {
-           Unode = dotSrcLines[i].split(trg)[0];
-           //console.log('downstream: %s', x)
-           Unodes.push(Unode)
-        }
-    return Unodes;
-  }
-} */
-
-// function getValues() {
-//     return [getFirstValue(), getSecondValue()];
-// }
-
+// function for searching node 
 function find_upstr(trg, dotSrcLines) {
     let Unodes = [];
     let rUnodes = [];
@@ -96,6 +73,7 @@ function find_upstr(trg, dotSrcLines) {
     return [Unodes, rUnodes];
 };
 
+//
 function find_downstr(trg, dotSrcLines) {
 let Dnodes = [];
 let rDnodes = [];
@@ -116,12 +94,8 @@ return [Dnodes, rDnodes];
 
 };
 
-// Unodes = find_upstr(trg_node, dotSrcLines)
-// var x = Unodes[0].replace('->','').trim()
-// Unodes2 = find_upstr(x, dotSrcLines)
-// recursive finding loop
 
-//let all_branches = [];
+// 從trg node開始找, 碰到boundary結束
 
 function find_nodes_return_new_graph(trg){
 
@@ -262,18 +236,6 @@ function interactive() {
             console.log('Element id="%s" class="%s" title="%s" text="%s" dotElement="%s"', id, class1, title, text, dotElement);
             console.log('Finding and deleting references to %s "%s" from the DOT source', class1, dotElement);
             
-
-            // find_nodes_return_new_graph()
-            // for (i = 0; i < dotSrcLines.length;) {
-            //     if (dotSrcLines[i].indexOf(dotElement) >= 0) {
-            //         console.log('Deleting line %d: %s', i, dotSrcLines[i]);
-            //         dotSrcLines.splice(i, 1);
-            //     } else {
-            //         i++;
-            //     }
-            // }
-            // dotSrc = dotSrcLines.join('\n');
-            // render();
             new_graph_ = find_nodes_return_new_graph(dotElement);
             dotSrc = new_graph_.join('\n');
             render();
