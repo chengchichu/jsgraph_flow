@@ -1,6 +1,6 @@
 
 
-const dotSrc = `
+var dotSrc = `
 
 digraph {
     rankdir="TB";
@@ -51,7 +51,7 @@ digraph {
 `;
 
 console.log('hello world');
-console.log('DOT source =', dotSrc);
+// console.log('DOT source =', dotSrc);
 
 var dotSrcLines = dotSrc.split('\n');
 //var n1 = "swip3 ->"
@@ -96,8 +96,6 @@ function find_upstr(trg, dotSrcLines) {
     return [Unodes, rUnodes];
 };
 
-
-
 function find_downstr(trg, dotSrcLines) {
 let Dnodes = [];
 let rDnodes = [];
@@ -125,110 +123,161 @@ return [Dnodes, rDnodes];
 
 //let all_branches = [];
 
-var boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
+function find_nodes_return_new_graph(trg){
 
-var trg_node = ["swip3"];
+        const boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
 
-// function nodename(mystr) {
-//     return mystr.replace('->','').trim();
-// }
-
-console.log('init')
-
-// 找上游
-UNODES_found = [];
-do { 
-    var tmp = [];
-    node_found = [];
-    for (j = 0; j < trg_node.length;j++) {
-        node_i = find_upstr(trg_node[j], dotSrcLines);
-        node_found.push(node_i[0])      
-        UNODES_found = UNODES_found.concat(node_i[1]);
-        console.log(node_i)
+        var trg_node = [trg];
         
-        if (node_i[0].length>0) {           
-           // 這行回傳的時候undefined  1230
-           //var nodename = node_i.forEach(function (mystr) {mystr.replace('->','').trim()} );
-           nodename = node_i[0].map(function(mystr){
-               return mystr.replace('->','').trim();    
-           });
-        } else {
-           nodename=[];
-        };
-    }    
-    trg_node = nodename;
-    console.log(trg_node)
-    var overlap = trg_node.filter(value => boundary_node.includes(value));
-    console.log(overlap.length)
-}
-while (overlap.length==0)
+       
 
-console.log(UNODES_found)
+        console.log('finding node init')
+        // 找上游
+        UNODES_found = [];
+        do { 
+            var tmp = [];
+            node_found = [];
+            for (j = 0; j < trg_node.length;j++) {
+                node_i = find_upstr(trg_node[j], dotSrcLines);
+                node_found.push(node_i[0])      
+                UNODES_found = UNODES_found.concat(node_i[1]);
+                console.log(node_i)
+                
+                if (node_i[0].length>0) {           
+                // 這行回傳的時候undefined  1230
+                //var nodename = node_i.forEach(function (mystr) {mystr.replace('->','').trim()} );
+                nodename = node_i[0].map(function(mystr){
+                    return mystr.replace('->','').trim();    
+                });
+                } else {
+                nodename=[];
+                };
+            }    
+            trg_node = nodename;
+            console.log(trg_node)
+            var overlap = trg_node.filter(value => boundary_node.includes(value));
+            console.log(overlap.length)
+        }
+        while (overlap.length==0)
+
+// console.log(UNODES_found)
 // while ((node_found) || (overlap.length>0)) 
+// var boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
+// var trg_node = ["swip3"];
+        var trg_node = [trg];
+        // 找下游
+        DNODES_found = [];
+        do { 
+            var tmp = [];
+            node_found = [];
+            for (j = 0; j < trg_node.length;j++) {
+                node_i = find_downstr(trg_node[j], dotSrcLines);
+                node_found.push(node_i[0])      
+                DNODES_found = DNODES_found.concat(node_i[1]);
+                console.log(node_i)
+                
+                if (node_i[0].length>0) {           
+                // 這行回傳的時候undefined  1230
+                //var nodename = node_i.forEach(function (mystr) {mystr.replace('->','').trim()} );
+                nodename = node_i[0].map(function(mystr){
+                    return mystr.replace('->','').trim();    
+                });
+                } else {
+                nodename=[];
+                };
+            }    
+            trg_node = nodename;
+            console.log(trg_node)
+            var overlap = trg_node.filter(value => boundary_node.includes(value));
+            console.log(overlap.length)
+        }
+        while (overlap.length==0)
 
-
-var boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
-var trg_node = ["swip3"];
-
-// 找下游
-DNODES_found = [];
-do { 
-    var tmp = [];
-    node_found = [];
-    for (j = 0; j < trg_node.length;j++) {
-        node_i = find_downstr(trg_node[j], dotSrcLines);
-        node_found.push(node_i[0])      
-        DNODES_found = DNODES_found.concat(node_i[1]);
-        console.log(node_i)
+        // console.log(DNODES_found)
+        const Node_all = UNODES_found.concat(DNODES_found)
+        console.log(Node_all)
         
-        if (node_i[0].length>0) {           
-           // 這行回傳的時候undefined  1230
-           //var nodename = node_i.forEach(function (mystr) {mystr.replace('->','').trim()} );
-           nodename = node_i[0].map(function(mystr){
-               return mystr.replace('->','').trim();    
-           });
-        } else {
-           nodename=[];
+        // searching all nodes, and forming new graph
+        for (i = 0; i < dotSrcLines.length;) {
+            var bool_v = [];
+            var z = true
+            for (k = 0; k < Node_all.length;k++) {
+                bool_v.push(dotSrcLines[i].includes(Node_all[k]))
+            };
+            var sum = 0
+            bool_v.forEach(x => {
+            sum += x;
+            });
+            if (sum>0) {
+                z = false;    
+            };    
+            // console.log(dotSrcLines[i])
+            // console.log(allz)
+            if ((z==true) && (dotSrcLines[i].includes('->'))) {  
+            dotSrcLines.splice(i,1);
+            } else {
+            i++;
+            };
         };
-    }    
-    trg_node = nodename;
-    console.log(trg_node)
-    var overlap = trg_node.filter(value => boundary_node.includes(value));
-    console.log(overlap.length)
-}
-while (overlap.length==0)
-
-console.log(DNODES_found)
-
-
-
-const Node_all = UNODES_found.concat(DNODES_found)
-console.log(Node_all)
-console.log( dotSrcLines[24] )
-
-
-// const init_length = dotSrcLines.length
-for (i = 0; i < dotSrcLines.length;) {
-
-    z = !dotSrcLines[i].includes(UNODES_found);
-    // console.log(i)
-    // console.log('title:'+dotSrcLines[i])
-    // console.log(z)
-    // console.log('d:'+dotSrcLines[i].includes('->'))
-
-
-    if ((z==true) && (dotSrcLines[i].includes('->'))) {  
-       dotSrcLines.splice(i,1);
-    } else {
-       i++;
-    };
-    // // console.log('upstream: %s', x) 
-   
+        
+        var new_grpah = dotSrcLines
+        return new_grpah
+ 
 };
+// console.log(dotSrcLines)
 
-console.log(dotSrcLines)
+// new_graph_ = find_nodes_return_new_graph("swip3")
 
+// console.log(ans)
 
-// d3.select("#graph").graphviz().renderDot(dotSrc); 
+// d3.select("#graph").graphviz().renderDot(dotSrcLines.join('\n')); 
 
+// main animation loop
+var graphviz = d3.select("#graph").graphviz();
 
+function render() {
+    console.log('DOT source =', dotSrc);
+    dotSrcLines = dotSrc.split('\n');
+
+    graphviz
+        .transition(function() {
+            return d3.transition()
+                .delay(100)
+                .duration(1000);
+        })
+        .renderDot(dotSrc)
+        .on("end", interactive);
+}
+
+function interactive() {
+
+    nodes = d3.selectAll('.node,.edge');
+    nodes
+        .on("click", function () {
+            var title = d3.select(this).selectAll('title').text().trim();
+            var text = d3.select(this).selectAll('text').text();
+            var id = d3.select(this).attr('id');
+            var class1 = d3.select(this).attr('class');
+            dotElement = title.replace('->',' -> ');
+            console.log('Element id="%s" class="%s" title="%s" text="%s" dotElement="%s"', id, class1, title, text, dotElement);
+            console.log('Finding and deleting references to %s "%s" from the DOT source', class1, dotElement);
+            
+
+            // find_nodes_return_new_graph()
+            // for (i = 0; i < dotSrcLines.length;) {
+            //     if (dotSrcLines[i].indexOf(dotElement) >= 0) {
+            //         console.log('Deleting line %d: %s', i, dotSrcLines[i]);
+            //         dotSrcLines.splice(i, 1);
+            //     } else {
+            //         i++;
+            //     }
+            // }
+            // dotSrc = dotSrcLines.join('\n');
+            // render();
+            new_graph_ = find_nodes_return_new_graph(dotElement);
+            dotSrc = new_graph_.join('\n');
+            render();
+        });
+}
+
+render(dotSrc);
