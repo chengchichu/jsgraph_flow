@@ -15,15 +15,15 @@ digraph {
     node [ shape="box", style="rounded", fontname="Lato", margin=0.2, color="black"]
     
     
-    feature1 [ label="feature1" id="f1" fontcolor="blue" color="blue" ]
-    feature2 [ label="feature2" id="f2" fontcolor="blue" color="blue" ]
-    swip1 [ label="swip1" id="sp1" fontcolor="#000000" color="blue" ]
-    swip2 [ label="swip2" id="sp2" fontcolor="#000000" ]
-    swip4 [ label="swip4" id="sp4" fontcolor="#000000" ]
-    swip3 [ label="swip3" id="sp3" fontcolor="red" color="red" ]
-    swip5 [ label="swip5" id="sp5" fontcolor="#000000" ]
-    hwip1 [ label="hwip1" id="hp1" fontcolor="green" color="green" ]
-    hwip2 [ label="hwip2" id="hp2" fontcolor="#000000" ]
+    feature1 [ label="feature1" id="node_f1" fontcolor="blue" color="blue" ]
+    feature2 [ label="feature2" id="node_f2" fontcolor="blue" color="blue" ]
+    swip1 [ label="swip1" id="node_sp1" fontcolor="#000000" color="blue" ]
+    swip2 [ label="swip2" id="node_sp2" fontcolor="#000000" ]
+    swip4 [ label="swip4" id="node_sp4" fontcolor="#000000" ]
+    swip3 [ label="swip3" id="node_sp3" fontcolor="red" color="red" ]
+    swip5 [ label="swip5" id="node_sp5" fontcolor="#000000" ]
+    hwip1 [ label="hwip1" id="node_hp1" fontcolor="green" color="green" ]
+    hwip2 [ label="hwip2" id="node_hp2" fontcolor="#000000" ]
     
     feature1 -> swip1 [label="f1_to_sp1" id="E_f1sp1"]
     feature2 -> swip1 [label="f2_to_sp1" id="E_f2sp1"]
@@ -35,17 +35,11 @@ digraph {
     swip2 -> hwip2 [label="sp2_to_hp2" id="E_sp2hp2"]
     swip3 -> hwip1 [label="sp3_to_hp1" id="E_sp3hp1"]
     
-    subgraph { 
-        rank = same; swip3; swip4
-    } 
+    subgraph {rank = same; swip3; swip4}
     
-        subgraph { 
-        rank = same; swip1; swip2
-    } 
-    
-    subgraph { 
-        rank = same; hwip1; hwip2
-    } 
+    subgraph {rank = same; swip1; swip2}
+
+    subgraph {rank = same; hwip1; hwip2} 
     
 }
 
@@ -89,25 +83,45 @@ for (i = 0; i < dotSrcLines.length;i++) {
 
     }
 }   
-console.log(rDnodes)
+// console.log(rDnodes)
 return [Dnodes, rDnodes];
 
 };
 
+function arr_find(arr, docline){
+    var bool_v = [];
+    
+    for (k = 0; k < arr.length;k++) {
+        bool_v.push(docline.includes(arr[k]))
+    };
+    var sum = 0
+    bool_v.forEach(x => {
+    sum += x;
+    });
+    
+    return sum
+}
+
 
 // 從trg node開始找, 碰到boundary結束
 
-function find_nodes_return_new_graph(trg){
+function find_nodes_return_new_graph(trg) {
 
         const boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
 
         var trg_node = [trg];
         
-       
+        var whether_bound = trg_node.filter(value => boundary_node.includes(value));
+        if (whether_bound.length>0) {
+           
+        console.log('finding boundary node:'+trg_node[0])   
+
+        } else {
 
         console.log('finding node init')
         // 找上游
         UNODES_found = [];
+        Unode_name = [];
         do { 
             var tmp = [];
             node_found = [];
@@ -128,12 +142,14 @@ function find_nodes_return_new_graph(trg){
                 };
             }    
             trg_node = nodename;
+            Unode_name = Unode_name.concat(trg_node)
             console.log(trg_node)
+            
             var overlap = trg_node.filter(value => boundary_node.includes(value));
-            console.log(overlap.length)
+            // console.log(overlap.length)
         }
         while (overlap.length==0)
-
+         
 // console.log(UNODES_found)
 // while ((node_found) || (overlap.length>0)) 
 // var boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
@@ -141,6 +157,7 @@ function find_nodes_return_new_graph(trg){
         var trg_node = [trg];
         // 找下游
         DNODES_found = [];
+        Dnode_name = [];
         do { 
             var tmp = [];
             node_found = [];
@@ -161,48 +178,97 @@ function find_nodes_return_new_graph(trg){
                 };
             }    
             trg_node = nodename;
+            Dnode_name = Dnode_name.concat(trg_node)
             console.log(trg_node)
             var overlap = trg_node.filter(value => boundary_node.includes(value));
-            console.log(overlap.length)
+            // console.log(overlap.length)
         }
         while (overlap.length==0)
 
         // console.log(DNODES_found)
         const Node_all = UNODES_found.concat(DNODES_found)
+        var trg_node = [trg];
+        const Node_name_all = Unode_name.concat(Dnode_name).concat(trg_node)
         console.log(Node_all)
+        console.log(Node_name_all)
         
-        // searching all nodes, and forming new graph
+        // deleting graph branches 
         for (i = 0; i < dotSrcLines.length;) {
-            var bool_v = [];
-            var z = true
-            for (k = 0; k < Node_all.length;k++) {
-                bool_v.push(dotSrcLines[i].includes(Node_all[k]))
-            };
-            var sum = 0
-            bool_v.forEach(x => {
-            sum += x;
-            });
-            if (sum>0) {
-                z = false;    
-            };    
+            
+            // var z = true
+            sum = arr_find(Node_all, dotSrcLines[i])
+            // if (sum>0) {
+            //     z = false;    
+            // };    
             // console.log(dotSrcLines[i])
             // console.log(allz)
-            if ((z==true) && (dotSrcLines[i].includes('->'))) {  
+            // delete the edge 
+            if ((sum==0) && (dotSrcLines[i].includes('->'))) {  
             dotSrcLines.splice(i,1);
             } else {
             i++;
             };
         };
         
-        var new_grpah = dotSrcLines
-        return new_grpah
+        // deleting node
+        deleted_node = []
+        for (i = 0; i < dotSrcLines.length;) {
+            // var z = true
+            sum = arr_find(Node_name_all, dotSrcLines[i])
+            // if (sum>0) {
+            //     z = false;    
+            // };    
+            // console.log(dotSrcLines[i])
+            // console.log(allz)
+            // delete the edge
+           
+            if ((sum==0) && (dotSrcLines[i].includes('node_'))) {  
+            
+         
+            deleted_node.push(dotSrcLines[i].split('[')[0].trim())
+            dotSrcLines.splice(i,1);
+            
+            } else {
+            i++;
+            };
+        }; // delete node
+
+        console.log(deleted_node)
+        
+        // delete subgraph
+
+        for (i = 0; i < dotSrcLines.length;) {
+  
+            sum = arr_find(deleted_node, dotSrcLines[i])
+            if (sum>0) {  
+                dotSrcLines.splice(i,1);
+                } else {
+                i++;
+                };
+            
+        };    
  
+        
+        
+ 
+        }; // if not boundary node
+        
+        var new_grpah = dotSrcLines
+        return new_grpah 
 };
+
+
+
 // console.log(dotSrcLines)
 
-// new_graph_ = find_nodes_return_new_graph("swip3")
+// const boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];       
+// var whether_bound = ["feature1"].filter(value => boundary_node.includes(value));
 
-// console.log(ans)
+// new_graph_ = find_nodes_return_new_graph("hwip1")
+// new_graph_ = find_nodes_return_new_graph("hwip1")
+
+// console.log(whether_bound.length)
+
 
 // d3.select("#graph").graphviz().renderDot(dotSrcLines.join('\n')); 
 
@@ -232,11 +298,16 @@ function interactive() {
             var text = d3.select(this).selectAll('text').text();
             var id = d3.select(this).attr('id');
             var class1 = d3.select(this).attr('class');
+           
+            // var color = d3.select(this).style("fill", "yellow");
+
             dotElement = title.replace('->',' -> ');
             console.log('Element id="%s" class="%s" title="%s" text="%s" dotElement="%s"', id, class1, title, text, dotElement);
             console.log('Finding and deleting references to %s "%s" from the DOT source', class1, dotElement);
-            
+            console.log('%s',color)
+
             new_graph_ = find_nodes_return_new_graph(dotElement);
+            // console.log(new_graph_)
             dotSrc = new_graph_.join('\n');
             render();
         });
