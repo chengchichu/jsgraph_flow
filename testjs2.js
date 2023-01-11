@@ -1,29 +1,31 @@
 
 // base graph
 
+// rankdir="TB";
+// splines=true;
+// overlap=false;
+// nodesep="0.2";
+// ranksep="0.4";
+// label="overview";
+// labelloc="t";
+// fontname="Lato";
+
 var dotSrc = `
 
 digraph {
-    rankdir="TB";
-    splines=true;
-    overlap=false;
-    nodesep="0.2";
-    ranksep="0.4";
-    label="overview";
-    labelloc="t";
-    fontname="Lato";
-    node [ shape="box", style="rounded", fontname="Lato", margin=0.2, color="black"]
+ 
+    node [ shape="box", style="rounded", fontname="Lato", margin=0.2 ]
     
     
-    feature1 [ label="feature1" id="node_f1" fontcolor="blue" color="blue" ]
-    feature2 [ label="feature2" id="node_f2" fontcolor="blue" color="blue" ]
-    swip1 [ label="swip1" id="node_sp1" fontcolor="#000000" color="blue" ]
-    swip2 [ label="swip2" id="node_sp2" fontcolor="#000000" ]
-    swip4 [ label="swip4" id="node_sp4" fontcolor="#000000" ]
-    swip3 [ label="swip3" id="node_sp3" fontcolor="red" color="red" ]
-    swip5 [ label="swip5" id="node_sp5" fontcolor="#000000" ]
-    hwip1 [ label="hwip1" id="node_hp1" fontcolor="green" color="green" ]
-    hwip2 [ label="hwip2" id="node_hp2" fontcolor="#000000" ]
+    feature1 [ label="feature1" id="node_f1" fontcolor="black" color="black" ]
+    feature2 [ label="feature2" id="node_f2" fontcolor="black" color="black" ]
+    swip1 [ label="swip1" id="node_sp1" fontcolor="#000000" color="black" ]
+    swip2 [ label="swip2" id="node_sp2" fontcolor="#000000" color="black" ]
+    swip4 [ label="swip4" id="node_sp4" fontcolor="#000000" color="black" ]
+    swip3 [ label="swip3" id="node_sp3" fontcolor="black" color="black" ]
+    swip5 [ label="swip5" id="node_sp5" fontcolor="#000000" color="black" ]
+    hwip1 [ label="hwip1" id="node_hp1" fontcolor="black" color="black" ]
+    hwip2 [ label="hwip2" id="node_hp2" fontcolor="#000000" color="black" ]
     
     feature1 -> swip1 [label="f1_to_sp1" id="E_f1sp1"]
     feature2 -> swip1 [label="f2_to_sp1" id="E_f2sp1"]
@@ -35,15 +37,18 @@ digraph {
     swip2 -> hwip2 [label="sp2_to_hp2" id="E_sp2hp2"]
     swip3 -> hwip1 [label="sp3_to_hp1" id="E_sp3hp1"]
     
-    subgraph {rank = same; swip3; swip4}
-    
-    subgraph {rank = same; swip1; swip2}
-
-    subgraph {rank = same; hwip1; hwip2} 
+     
     
 }
 
 `;
+
+
+// subgraph {rank = same; swip3; swip4}
+    
+//     subgraph {rank = same; swip1; swip2}
+
+//     subgraph {rank = same; hwip1; hwip2}
 
 // console.log('DOT source =', dotSrc);
 var dotSrcLines = dotSrc.split('\n');
@@ -105,7 +110,7 @@ function arr_find(arr, docline){
 
 // 從trg node開始找, 碰到boundary結束
 
-function find_nodes_return_new_graph(trg) {
+function find_nodes_return_new_graph(trg, id) {
 
         const boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
 
@@ -248,7 +253,17 @@ function find_nodes_return_new_graph(trg) {
             
         };    
  
-        
+        // change trg color
+        for (i = 0; i < dotSrcLines.length; i++) {
+  
+            if (dotSrcLines[i].includes(id)>0) {  
+                var newstr = dotSrcLines[i].split(" color")[0]+` color="yellow" ]`
+                dotSrcLines[i] = newstr
+                // console.log('hello change')
+               };
+            
+        };  
+
         
  
         }; // if not boundary node
@@ -299,14 +314,14 @@ function interactive() {
             var id = d3.select(this).attr('id');
             var class1 = d3.select(this).attr('class');
            
-            // var color = d3.select(this).style("fill", "yellow");
+            // var color = d3.select(this).style("background-color", "yellow");
 
             dotElement = title.replace('->',' -> ');
             console.log('Element id="%s" class="%s" title="%s" text="%s" dotElement="%s"', id, class1, title, text, dotElement);
             console.log('Finding and deleting references to %s "%s" from the DOT source', class1, dotElement);
-            console.log('%s',color)
+            // console.log('%s',color)
 
-            new_graph_ = find_nodes_return_new_graph(dotElement);
+            new_graph_ = find_nodes_return_new_graph(dotElement, id);
             // console.log(new_graph_)
             dotSrc = new_graph_.join('\n');
             render();
