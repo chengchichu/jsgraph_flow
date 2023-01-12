@@ -50,6 +50,23 @@ digraph {
 
 //     subgraph {rank = same; hwip1; hwip2}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // console.log('DOT source =', dotSrc);
 var dotSrcLines = dotSrc.split('\n');
 
@@ -108,11 +125,22 @@ function arr_find(arr, docline){
 }
 
 
+// parsing boundary node
+// for (j = 0; j < dotSrcLines.length;j++) {
+    
+//     node_found.push(node_i[0])      
+//     DNODES_found = DNODES_found.concat(node_i[1]);
+//     console.log(node_i)
+    
+// } 
+
 // 從trg node開始找, 碰到boundary結束
 
-function find_nodes_return_new_graph(trg, id) {
+function find_nodes_return_new_graph(trg, id, bns) {
 
-        const boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
+        // const boundary_node = ["feature1", "feature2", "hwip1", "hwip2"];
+        const boundary_node = bns
+        // const boundary_node = ["0", "4", "5", "6", "8", "9"];
 
         var trg_node = [trg];
         
@@ -288,44 +316,127 @@ function find_nodes_return_new_graph(trg, id) {
 // d3.select("#graph").graphviz().renderDot(dotSrcLines.join('\n')); 
 
 // main animation loop
-var graphviz = d3.select("#graph").graphviz();
 
-function render() {
-    console.log('DOT source =', dotSrc);
-    dotSrcLines = dotSrc.split('\n');
 
-    graphviz
-        .transition(function() {
-            return d3.transition()
-                .delay(100)
-                .duration(1000);
-        })
-        .renderDot(dotSrc)
-        .on("end", interactive);
+function readTextFile(file, callback) {
+   var rawFile = new XMLHttpRequest();
+   rawFile.overrideMimeType("application/json");
+   rawFile.open("GET", file, true);
+   rawFile.onreadystatechange = function() {
+       if (rawFile.readyState === 4 && rawFile.status == "200") {
+           callback(rawFile.responseText);
+       }
+   }
+   rawFile.send(null);
+   
 }
 
-function interactive() {
+String.format = function() {
+    var s = arguments[0];
+    for (var i = 0; i < arguments.length - 1; i += 1) {
+        var reg = new RegExp('\\{' + i + '\\}', 'gm');
+        s = s.replace(reg, arguments[i + 1]);
+    }
+    return s;
+ };
 
-    nodes = d3.selectAll('.node,.edge');
-    nodes
-        .on("click", function () {
-            var title = d3.select(this).selectAll('title').text().trim();
-            var text = d3.select(this).selectAll('text').text();
-            var id = d3.select(this).attr('id');
-            var class1 = d3.select(this).attr('class');
-           
-            // var color = d3.select(this).style("background-color", "yellow");
 
-            dotElement = title.replace('->',' -> ');
-            console.log('Element id="%s" class="%s" title="%s" text="%s" dotElement="%s"', id, class1, title, text, dotElement);
-            console.log('Finding and deleting references to %s "%s" from the DOT source', class1, dotElement);
-            // console.log('%s',color)
+readTextFile("./sample.json", function(text){
+   var data = JSON.parse(text);
+   console.log(data);
+   var node_default = String.format(`    node [ shape="{0}", style="{1}", fontname="{2}", margin="{3}", color="{4}"]`,"box","rounded","Lato","0.2","black")
+   
+   collected_node = []
+   paresed_node = []
+   for (const key of Object.keys(data.nodes)) {     
+       var node_i = String.format(`    "{0}" [ label="{1}", id="{2}", frontcolor="black", color="black" ]`,key,data.nodes[key].id,"node_"+data.nodes[key].id)
+       paresed_node.push(node_i)
+       collected_node.push(key)
+      //  console.log(node_i)
+   };
+//    console.log(paresed_node);
+   collected_edge = []
+   paresed_edge = []
+   for (const key of Object.keys(data.links)) {
+      var edge_i = String.format(`    {0} [ label="{1}", id="{2}"]`,data.links[key].source+' -> '+ data.links[key].target, data.links[key].source+'to'+ data.links[key].target ,'E_'+data.links[key].source+data.links[key].target)
+      paresed_edge.push(edge_i)
+      collected_edge.push(data.links[key].source+' -> '+ data.links[key].target)
+    //   console.log(edge_i)
+   };
+//    console.log(paresed_edge);
+   D = ["digraph {"].concat(node_default).concat(paresed_node).concat(paresed_edge).concat("}")
+   var dotSrc = D.join('\n')
+   console.log(dotSrc)
+   console.log(collected_node)
+   console.log(collected_edge)
 
-            new_graph_ = find_nodes_return_new_graph(dotElement, id);
-            // console.log(new_graph_)
-            dotSrc = new_graph_.join('\n');
-            render();
-        });
-}
+//    function addvector(a,b){
+//     return a.map((e,i) => e + b[i]);
+//    }
 
-render(dotSrc);
+   // determine boundary node
+   boundary_nodes = [];
+   for (var i = 0; i < collected_node.length; i ++) {
+          
+       upstr = collected_node[i]+' ->'
+       downstr = '-> '+collected_node[i]
+       be_upstr = collected_edge.map(item => item.includes(upstr))
+       be_downstr = collected_edge.map(item => item.includes(downstr))
+     
+       var be_upstr_ = be_upstr.reduce((a, b) => a + b)
+       var be_downstr = be_downstr.reduce((a, b) => a + b)
+       if ((be_upstr_== 0) || (be_downstr==0)) {
+           boundary_nodes.push(collected_node[i])
+       } 
+      
+    // console.log(boundary_nodes)
+    };
+
+   
+
+
+   var graphviz = d3.select("#graph").graphviz();
+
+   function render() {
+        console.log('DOT source =', dotSrc);
+        dotSrcLines = dotSrc.split('\n');
+
+        graphviz
+            .transition(function() {
+                return d3.transition()
+                    .delay(100)
+                    .duration(1000);
+            })
+            .renderDot(dotSrc)
+            .on("end", interactive);
+    }
+
+    function interactive() {
+
+        nodes = d3.selectAll('.node,.edge');
+        nodes
+            .on("click", function () {
+                var title = d3.select(this).selectAll('title').text().trim();
+                var text = d3.select(this).selectAll('text').text();
+                var id = d3.select(this).attr('id');
+                var class1 = d3.select(this).attr('class');
+            
+                // var color = d3.select(this).style("background-color", "yellow");
+
+                dotElement = title.replace('->',' -> ');
+                console.log('Element id="%s" class="%s" title="%s" text="%s" dotElement="%s"', id, class1, title, text, dotElement);
+                console.log('Finding and deleting references to %s "%s" from the DOT source', class1, dotElement);
+                // console.log('%s',color)
+
+                new_graph_ = find_nodes_return_new_graph(dotElement, id, boundary_nodes);
+                // console.log(new_graph_)
+                dotSrc = new_graph_.join('\n');
+                render();
+            });
+    }
+
+
+
+    render(dotSrc);
+});
+
